@@ -1,13 +1,11 @@
 import os
-import sys
 from flask import Flask, request
 from flask.ext.restful import Resource, Api
 
 import sqlalchemy
-from sqlalchemy import Column, ForeignKey, UniqueConstraint, PrimaryKeyConstraint, and_, or_
-from sqlalchemy import create_engine, update, Integer, String, DateTime
+from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship, sessionmaker
+from sqlalchemy.orm import sessionmaker
 
 
 # Set timezone to UTC
@@ -49,21 +47,44 @@ api.add_resource(RouterData, '/routerdata')
 ######################
 
 def parse_data(data):
-
+    """
+    Process data received from the node
+    """
     nodes = data['nodes']
-    timestamp = data['timestamp']  # UTC time in epoch
+    timestamp = data['timestamp']  # UTC time in epoch from the node
+
+    # Update global last_seen
+    update_last_seen(timestamp)
 
     nodes = nodes.split("\n")
     # Remove first 2 lines because it is just the header
     nodes.pop(0)
     nodes.pop(0)
 
+    # Update/add each node to the database
     # name,blocked,primaryIp,routes,viaIp,viaDev,metric,lastDesc,lastRef,
-    for node in nodes:
-        print(node)
+    for node_raw_data in nodes:
+        node_raw_data = node_raw_data.split(',')
+        node_data = {'name': node_raw_data[0],
+                     'blocked': node_raw_data[1],
+                     'primaryIp': node_raw_data[2],
+                     'routes': node_raw_data[3],
+                     'viaIp': node_raw_data[4],
+                     'viaDev': node_raw_data[5],
+                     'metric': node_raw_data[6],
+                     'lastDesc': node_raw_data[7],
+                     'lastRef': node_raw_data[8],
+                     'lastSeen': timestamp,
+                     }
+        add_node(node_data)
 
-    print(timestamp)
-    print(len(nodes))
+    # Check if we have any new nodes
+    # A node is new when `Node.lastSeen` == `Node.firstSeen`
+
+
+    # Check to see what nodes are down
+    # A node is down when `Node.lastSeen` != `Status.lastSeen`
+
 
 
 ######################
@@ -72,11 +93,50 @@ def parse_data(data):
 ##
 ######################
 
-def update_last_seen(self, last_seen):
+def add_node(data):
+    node_exist = db_session.query(Node).filter(Node.primaryIp == data['primaryIp']).first()
+    if node_exist is None:
+        # Add new node to database
+        node_data = Node(name=data['name'],
+                         blocked=data['blocked'],
+                         primaryIp=data['primaryIp'],
+                         routes=data['routes'],
+                         viaIp=data['viaIp'],
+                         viaDev=data['viaDev'],
+                         metric=data['metric'],
+                         lastDesc=data['lastDesc'],
+                         lastRef=data['lastRef'],
+                         lastSeen=data['lastSeen'],
+                         firstSeen=data['lastSeen'],
+                         )
+        db_session.add(node_data)
+
+    else:
+        node_data = db_session.query(Node)\
+                              .filter(Node.primaryIp == data['primaryIp'])\
+                              .update({Node.name: data['name'],
+                                       Node.blocked: data['blocked'],
+                                       Node.routes: data['routes'],
+                                       Node.viaIp: data['viaIp'],
+                                       Node.viaDev: data['viaDev'],
+                                       Node.metric: data['metric'],
+                                       Node.lastDesc: data['lastDesc'],
+                                       Node.lastRef: data['lastRef'],
+                                       Node.lastSeen: data['lastSeen'],
+                                       })
+
+    try:
+        db_session.commit()
+    except sqlalchemy.exc.IntegrityError:
+        # tried to add an item to the database which was already there
+        pass
+
+
+def update_last_seen(last_seen):
     """
     update last_seen value in database
     """
-    db_session.query(Status).filter(Status.name == 'last_seen').update({Status.value: last_seen})
+    db_session.query(Status).filter(Status.name == 'lastSeen').update({Status.value: last_seen})
     db_session.commit()
 
 
@@ -93,7 +153,7 @@ class Status(Base):
     value = Column(String(50), nullable=False)
 
 
-class Nodes(Base):
+class Node(Base):
     __tablename__ = 'nodes'
     name      = Column(String(100), nullable=False)
     blocked   = Column(Integer,     nullable=False)
@@ -104,6 +164,8 @@ class Nodes(Base):
     metric    = Column(String(10),  nullable=False)
     lastDesc  = Column(Integer,     nullable=False)
     lastRef   = Column(Integer,     nullable=False)
+    lastSeen  = Column(Integer,     nullable=False)
+    firstSeen = Column(Integer,     nullable=False)
 
 
 ######################
@@ -130,7 +192,7 @@ if __name__ == '__main__':
 
     if db_is_new:
         # Init database values
-        status_last_seen = Status(name='last_seen', value=0)
+        status_last_seen = Status(name='lastSeen', value=0)
         db_session.add(status_last_seen)
         db_session.commit()
 
