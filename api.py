@@ -1,5 +1,5 @@
 import os
-from flask import Flask, request
+from flask import Flask, request, send_from_directory
 from flask.ext.restful import Resource, Api
 
 import sqlalchemy
@@ -13,17 +13,23 @@ os.environ['TZ'] = 'UTC'
 
 Base = declarative_base()
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder="web")
 api = Api(app, prefix='/api/v1')
 
 
-@app.after_request
-def after_request(response):
-    response.headers.add('Access-Control-Allow-Origin', '*')
-    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE')
-    return response
+######################
+##
+## Static web routes
+##
+######################
 
+@app.route('/')
+def index():
+    return send_from_directory('web', 'index.html')
+
+@app.route('/<path:path>')
+def static_files(path):
+    return send_from_directory('web', path)
 
 ######################
 ##
