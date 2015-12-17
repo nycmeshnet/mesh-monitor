@@ -11,10 +11,18 @@ from sqlalchemy.orm import sessionmaker
 # Set timezone to UTC
 os.environ['TZ'] = 'UTC'
 
-Base = declarative_base(
-)
+Base = declarative_base()
+
 app = Flask(__name__)
 api = Api(app, prefix='/api/v1')
+
+
+@app.after_request
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE')
+    return response
 
 
 ######################
@@ -23,7 +31,7 @@ api = Api(app, prefix='/api/v1')
 ##
 ######################
 
-class RouterData(Resource):
+class APIRouterData(Resource):
     def post(self):
         success = False
         # Make sure it is an authorized router
@@ -37,7 +45,28 @@ class RouterData(Resource):
 
         return {'success': success}
 
-api.add_resource(RouterData, '/routerdata')
+
+class APINodes(Resource):
+    def get(self):
+        nodes = db_session.query(Node).all()
+
+        node_list = []
+        for node in nodes:
+            node_list.append(row2dict(node))
+            
+        return {'nodes': node_list}
+
+
+class APILastSeen(Resource):
+    def get(self):
+        last_seen = int(db_session.query(Status).filter(Status.name == 'lastSeen').first().value)
+
+        return {'last_seen': last_seen}
+
+
+api.add_resource(APIRouterData, '/routerdata')
+api.add_resource(APINodes, '/nodes')
+api.add_resource(APILastSeen, '/nodes/last_seen')
 
 
 ######################
@@ -45,6 +74,14 @@ api.add_resource(RouterData, '/routerdata')
 ## Util functions
 ##
 ######################
+
+def row2dict(row):
+    d = {}
+    for column in row.__table__.columns:
+        d[column.name] = getattr(row, column.name)
+
+    return d
+
 
 def parse_data(data):
     """
