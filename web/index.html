@@ -9,23 +9,20 @@
 
     <!-- Bootstrap -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/styles.css" rel="stylesheet">
 </head>
 <body>
 
-
-    <div id="list">
-    </div>
-
+    <div id="list"></div>
 
     <script id="nodeList" type="text/x-handlebars-template">
         <div class="panel panel-default">
             
-            <div class="panel-heading">Nodes (Last Seen: {{global_last_seen}})</div>
+            <div class="panel-heading">Nodes (Last Seen: {{global_last_seen_formatted}})</div>
             
             <table class="table">
                 <thead>
                     <tr>
-                        <th>Status</th>
                         <th>Name</th>
                         <th>IP</th>
                         <th>Last Seen</th>
@@ -38,21 +35,22 @@
                 </tbody>
             </table>
         </div>
-
     </script>
 
     <script id="nodeRow" type="text/x-handlebars-template">
         <tr>
-            <td><span class="badge">{{node.status}}</span></td>
-            <td>{{node.name}}</td>
+            <td>
+                <span class="badge badge-{{node.status}}">&nbsp</span>
+                {{node.name}}
+            </td>
             <td>{{node.primaryIp}}</td>
-            <td>{{node.lastSeen}}</td>
+            <td>{{node.last_seen_formatted}}</td>
         </tr>
-
     </script>
 
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.5/handlebars.min.js"></script>
+    <script src="js/jquery.min.js"></script>
+    <script src="js/handlebars.min.js"></script>
+    <script src="js/moment.min.js"></script>
     <script src="js/bootstrap.min.js"></script>
     <script src="js/init.js"></script>
 </body>
