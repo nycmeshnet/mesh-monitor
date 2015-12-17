@@ -12,8 +12,10 @@
     <link href="css/styles.css" rel="stylesheet">
 </head>
 <body>
-
-    <div id="list"></div>
+    <div id="container">
+        <div id="header"></div>
+        <div id="list"></div>
+    </div>
 
     <script id="nodeList" type="text/x-handlebars-template">
         <div class="panel panel-default">
@@ -46,6 +48,12 @@
             <td>{{node.primaryIp}}</td>
             <td>{{node.lastSeenFormatted}}</td>
         </tr>
+    </script>
+
+    <script id="nodeHeader" type="text/x-handlebars-template">
+        <h1>NYC Meshnet</h1>
+        <h3>Total Nodes: {{totalCount}}</h3>
+        <h3>Connected Nodes: {{connectedCount}}</h3>
     </script>
 
     <script src="js/jquery.min.js"></script>

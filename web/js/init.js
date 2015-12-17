@@ -1,7 +1,12 @@
 $(function(){
 
     var template_nodeList = Handlebars.compile($("#nodeList").html());
+    var template_nodeHeader = Handlebars.compile($("#nodeHeader").html());
     Handlebars.registerPartial('nodeRow', $("#nodeRow").html());
+
+    $.getJSON( "/api/v1/nodes/count", function( json ) {
+        $('#header').html(template_nodeHeader(json.data))
+    });
 
     $.getJSON( "/api/v1/nodes", function( json ) {
         console.log(json);

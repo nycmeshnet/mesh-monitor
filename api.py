@@ -72,8 +72,10 @@ class APINodes(Resource):
 
 class APINodesCount(Resource):
     def get(self):
-        total_nodes = 0
-        connected_nodes = 0
+        global_last_seen = int(db_session.query(Status).filter(Status.name == 'lastSeen').first().value)
+
+        total_nodes = db_session.query(Node).count()
+        connected_nodes = db_session.query(Node).filter(Node.lastSeen == global_last_seen).count()
 
         return {'data': {'totalCount': total_nodes,
                          'connectedCount': connected_nodes},
