@@ -8,7 +8,7 @@ app = Flask(__name__)
 api = Api(app, prefix='/api/v1')
 
 
-class LiveNodes(Resource):
+class RouterData(Resource):
     def post(self):
         # Make sure it is an authorized router
         router = request.remote_addr
@@ -20,7 +20,7 @@ class LiveNodes(Resource):
 
         return {'success': True}
 
-api.add_resource(LiveNodes, '/livenodes')
+api.add_resource(RouterData, '/routerdata')
 
 
 def parse_data(data):
