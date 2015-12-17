@@ -18,21 +18,37 @@
 
 
     <script id="nodeList" type="text/x-handlebars-template">
-        <div class="nodes">
-
-            <h1>Nodes</h1>
-
-            {{#each nodes}}
-                {{> nodeRow node=this }}
-            {{/each}}
+        <div class="panel panel-default">
+            
+            <div class="panel-heading">Nodes (Last Seen: {{global_last_seen}})</div>
+            
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Status</th>
+                        <th>Name</th>
+                        <th>IP</th>
+                        <th>Last Seen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each nodes}}
+                        {{> nodeRow node=this }}
+                    {{/each}}
+                </tbody>
+            </table>
         </div>
+
     </script>
 
     <script id="nodeRow" type="text/x-handlebars-template">
-        <div class="node">
-            <span>{{node.name}}</span>
-            <span>{{node.lastSeen}}</span>
-        </div>
+        <tr>
+            <td><span class="badge">{{node.status}}</span></td>
+            <td>{{node.name}}</td>
+            <td>{{node.primaryIp}}</td>
+            <td>{{node.lastSeen}}</td>
+        </tr>
+
     </script>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>

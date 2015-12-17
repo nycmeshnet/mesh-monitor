@@ -27,9 +27,11 @@ api = Api(app, prefix='/api/v1')
 def index():
     return send_from_directory('web', 'index.html')
 
+
 @app.route('/<path:path>')
 def static_files(path):
     return send_from_directory('web', path)
+
 
 ######################
 ##
@@ -54,13 +56,18 @@ class APIRouterData(Resource):
 
 class APINodes(Resource):
     def get(self):
+        global_last_seen = int(db_session.query(Status).filter(Status.name == 'lastSeen').first().value)
         nodes = db_session.query(Node).all()
 
         node_list = []
         for node in nodes:
             node_list.append(row2dict(node))
-            
-        return {'nodes': node_list}
+
+        return {'data': {'nodes': node_list,
+                         'global_last_seen': global_last_seen
+                         },
+                'success': True,
+                }
 
 
 class APILastSeen(Resource):
@@ -124,10 +131,8 @@ def parse_data(data):
     # Check if we have any new nodes
     # A node is new when `Node.lastSeen` == `Node.firstSeen`
 
-
     # Check to see what nodes are down
     # A node is down when `Node.lastSeen` != `Status.lastSeen`
-
 
 
 ######################
