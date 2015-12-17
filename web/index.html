@@ -22,9 +22,10 @@
             
             <div class="panel-heading">Nodes (Last Seen: {{globalLastSeenFormatted}})</div>
             
-            <table class="table">
+            <table id="nodes-table" class="table table-striped tablesorter">
                 <thead>
                     <tr>
+                        <th style="width: 68px;">Status</th>
                         <th>Name</th>
                         <th>IP</th>
                         <th>Last Seen</th>
@@ -38,13 +39,16 @@
             </table>
         </div>
     </script>
-
+  
     <script id="nodeRow" type="text/x-handlebars-template">
         <tr>
-            <td>
-                <span class="badge badge-{{node.status}}">&nbsp</span>
-                {{node.name}}
+            <td style="text-align: center;">
+                <span class="badge badge-{{node.status}}">&nbsp
+                    <!-- Needed for sorting -->
+                    <span style="display: none;">{{node.statusSortValue}}</span>
+                </span>
             </td>
+            <td>{{node.name}}</td>
             <td>{{node.primaryIp}}</td>
             <td>{{node.lastSeenFormatted}}</td>
         </tr>
@@ -52,14 +56,17 @@
 
     <script id="nodeHeader" type="text/x-handlebars-template">
         <h1>NYC Meshnet</h1>
-        <h3>Total Nodes: {{totalCount}}</h3>
-        <h3>Connected Nodes: {{connectedCount}}</h3>
+        <div>
+            Total Nodes: {{totalCount}}<br />
+            Connected Nodes: {{connectedCount}}
+        </div>
     </script>
 
     <script src="js/jquery.min.js"></script>
     <script src="js/handlebars.min.js"></script>
     <script src="js/moment.min.js"></script>
     <script src="js/bootstrap.min.js"></script>
+    <script src="js/jquery.tablesorter.min.js"></script>
     <script src="js/init.js"></script>
 </body>
 </html>

@@ -16,13 +16,16 @@ $(function(){
         $.each(json.data.nodes, function( index, value ) {
             // Check if node is connected
             value.status = 'error';  // Default value
+            value.statusSortValue = 1;  // Default value
             if(value.lastSeen === json.data.globalLastSeen){
                 value.status = 'success';
+                value.statusSortValue = 0;
             }
             // Format last_seen
             value.lastSeenFormatted = formatTime(value.lastSeen)
         });
         $('#list').html(template_nodeList(json.data))
+        $("#nodes-table").tablesorter();
     });
 
     function formatTime(epoch){
