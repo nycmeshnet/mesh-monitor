@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <title>NYC Mesh Nodes</title>
+
+    <!-- Bootstrap -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+
+
+    <div id="list">
+    </div>
+
+
+    <script id="nodeList" type="text/x-handlebars-template">
+        <div class="nodes">
+
+            <h1>Nodes</h1>
+
+            {{#each nodes}}
+                {{> nodeRow node=this }}
+            {{/each}}
+        </div>
+    </script>
+
+    <script id="nodeRow" type="text/x-handlebars-template">
+        <div class="node">
+            <span>{{node.name}}</span>
+            <span>{{node.lastSeen}}</span>
+        </div>
+    </script>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.5/handlebars.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/init.js"></script>
+</body>
+</html>
