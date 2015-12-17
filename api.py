@@ -64,22 +64,26 @@ class APINodes(Resource):
             node_list.append(row2dict(node))
 
         return {'data': {'nodes': node_list,
-                         'global_last_seen': global_last_seen
+                         'globalLastSeen': global_last_seen
                          },
                 'success': True,
                 }
 
 
-class APILastSeen(Resource):
+class APINodesCount(Resource):
     def get(self):
-        last_seen = int(db_session.query(Status).filter(Status.name == 'lastSeen').first().value)
+        total_nodes = 0
+        connected_nodes = 0
 
-        return {'last_seen': last_seen}
+        return {'data': {'totalCount': total_nodes,
+                         'connectedCount': connected_nodes},
+                'success': True,
+                }
 
 
 api.add_resource(APIRouterData, '/routerdata')
 api.add_resource(APINodes, '/nodes')
-api.add_resource(APILastSeen, '/nodes/last_seen')
+api.add_resource(APINodesCount, '/nodes/count')
 
 
 ######################
