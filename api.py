@@ -1,9 +1,9 @@
 import os
+import sys
+from pushbullet import Pushbullet
 from flask import Flask, request, send_from_directory
 from flask.ext.restful import Resource, Api
-
-import sqlalchemy
-from sqlalchemy import create_engine, Column, Integer, String
+from sqlalchemy import create_engine, Column, Integer, String, and_
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
@@ -42,16 +42,19 @@ def static_files(path):
 class APIRouterData(Resource):
     def post(self):
         success = False
+        message = ""
         # Make sure it is an authorized router
-        router = request.remote_addr
-        if router == '10.224.98.1':
-            data = request.json
+        data = request.json
+        if data['auth'] == sys.argv[1]:
             parse_data(data)
             success = True
         else:
             print("Data from unauthorized router")
+            message = "Not authorized to submit data"
 
-        return {'success': success}
+        return {'success': success,
+                'message': message
+                }
 
 
 class APINodes(Resource):
@@ -102,6 +105,11 @@ def row2dict(row):
     return d
 
 
+def send_message(subject="NYC Mesh Node Monitor", content=""):
+    global pb
+    push = pb.push_note(subject, content)
+
+
 def parse_data(data):
     """
     Process data received from the node
@@ -136,9 +144,18 @@ def parse_data(data):
 
     # Check if we have any new nodes
     # A node is new when `Node.lastSeen` == `Node.firstSeen`
+    new_nodes = db_session.query(Node).filter(Node.firstSeen == timestamp)
+    for node in new_nodes:
+        send_message("New Node added!", node.name + " " + node.primaryIp)
 
     # Check to see what nodes are down
     # A node is down when `Node.lastSeen` != `Status.lastSeen`
+    down_nodes = db_session.query(Node).filter(and_(Node.lastSeen > int(timestamp)-360,
+                                                    Node.lastSeen != timestamp
+                                                    )
+                                               )
+    for node in down_nodes:
+        send_message("Node is down", node.name + " " + node.primaryIp)
 
 
 ######################
@@ -249,5 +266,8 @@ if __name__ == '__main__':
         status_last_seen = Status(name='lastSeen', value=0)
         db_session.add(status_last_seen)
         db_session.commit()
+
+    pb_api_key = sys.argv[2]
+    pb = Pushbullet(pb_api_key)
 
     app.run(host='0.0.0.0', debug=True)

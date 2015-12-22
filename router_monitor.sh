@@ -8,6 +8,6 @@ node_list=$node_list_raw
 host="http://10.224.98.177:5000/api/v1/routerdata"                                                                                                                       
 timestamp=$(date +%s)                                                                                                                                                   
                                                                                                                                                                         
-data={\"nodes\":\"$node_list\",\"timestamp\":\"$timestamp\"}                                                                                                            
+data={\"auth\":\"auth_code\",\"nodes\":\"$node_list\",\"timestamp\":\"$timestamp\"}                                                                                                            
                                                                                                                                                                         
 curl -i -X POST -H "Content-Type: application/json" -d "$data" $host
