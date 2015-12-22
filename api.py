@@ -154,8 +154,12 @@ def parse_data(data):
                                                     Node.lastSeen != timestamp
                                                     )
                                                )
+    down_nodes_message = ""
     for node in down_nodes:
-        send_message("Node is down", node.name + " " + node.primaryIp)
+        down_nodes_message += node.name + " " + node.primaryIp + "\n\n"
+
+    if down_nodes_message != "":
+        send_message("Nodes went down", down_nodes_message)
 
 
 ######################
