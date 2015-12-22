@@ -1,6 +1,6 @@
 import os
 import sys
-from pushbullet import Pushbullet
+import smtplib
 from flask import Flask, request, send_from_directory
 from flask.ext.restful import Resource, Api
 from sqlalchemy import create_engine, Column, Integer, String, and_
@@ -106,8 +106,13 @@ def row2dict(row):
 
 
 def send_message(subject="NYC Mesh Node Monitor", content=""):
-    global pb
-    push = pb.push_note(subject, content)
+    message = "Subject: %s\n\n%s" % (subject, content)
+
+    mail = smtplib.SMTP('smpt.gmail.com:587')
+    mail.starttls()
+    mail.login(mail_user, mail_password)
+    mail.sendmail(from_email, to_email, message)
+    mail.quit()
 
 
 def parse_data(data):
@@ -271,7 +276,9 @@ if __name__ == '__main__':
         db_session.add(status_last_seen)
         db_session.commit()
 
-    pb_api_key = sys.argv[2]
-    pb = Pushbullet(pb_api_key)
+    from_email = ""
+    to_email = ""
+    mail_user = ""
+    mail_password = ""
 
     app.run(host='0.0.0.0', debug=False)
