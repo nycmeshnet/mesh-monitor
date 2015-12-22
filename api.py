@@ -270,4 +270,4 @@ if __name__ == '__main__':
     pb_api_key = sys.argv[2]
     pb = Pushbullet(pb_api_key)
 
-    app.run(host='0.0.0.0', debug=True)
+    app.run(host='0.0.0.0', debug=False)
