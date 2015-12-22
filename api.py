@@ -108,7 +108,7 @@ def row2dict(row):
 def send_message(subject="NYC Mesh Node Monitor", content=""):
     message = "Subject: %s\n\n%s" % (subject, content)
 
-    mail = smtplib.SMTP('smpt.gmail.com:587')
+    mail = smtplib.SMTP('smtp.gmail.com:587')
     mail.starttls()
     mail.login(mail_user, mail_password)
     mail.sendmail(from_email, to_email, message)
