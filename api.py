@@ -1,9 +1,10 @@
 import os
 import sys
+import yaml
 import smtplib
 from flask import Flask, request, send_from_directory
 from flask.ext.restful import Resource, Api
-from sqlalchemy import create_engine, Column, Integer, String, and_
+from sqlalchemy import sqlalchemy, create_engine, Column, Integer, String, and_
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
@@ -45,7 +46,7 @@ class APIRouterData(Resource):
         message = ""
         # Make sure it is an authorized router
         data = request.json
-        if data['auth'] == sys.argv[1]:
+        if data['auth'] == config['auth_code']:
             parse_data(data)
             success = True
         else:
@@ -101,7 +102,6 @@ def row2dict(row):
     d = {}
     for column in row.__table__.columns:
         d[column.name] = getattr(row, column.name)
-
     return d
 
 
@@ -110,8 +110,8 @@ def send_message(subject="NYC Mesh Node Monitor", content=""):
 
     mail = smtplib.SMTP('smtp.gmail.com:587')
     mail.starttls()
-    mail.login(mail_user, mail_password)
-    mail.sendmail(from_email, to_email, message)
+    mail.login(config['mail']['user'], config['mail']['password'])
+    mail.sendmail(config['mail']['from'], config['mail']['to'], message)
     mail.quit()
 
 
@@ -148,14 +148,15 @@ def parse_data(data):
         add_node(node_data)
 
     # Check if we have any new nodes
-    # A node is new when `Node.lastSeen` == `Node.firstSeen`
     new_nodes = db_session.query(Node).filter(Node.firstSeen == timestamp)
     for node in new_nodes:
         send_message("New Node added!", node.name + " " + node.primaryIp)
 
     # Check to see what nodes are down
-    # A node is down when `Node.lastSeen` != `Status.lastSeen`
-    down_nodes = db_session.query(Node).filter(and_(Node.lastSeen > int(timestamp)-360,
+    down_timestamp = int(timestamp)-360
+    if DEBUG:
+        down_timestamp = int(timestamp)-90
+    down_nodes = db_session.query(Node).filter(and_(Node.lastSeen > down_timestamp,
                                                     Node.lastSeen != timestamp
                                                     )
                                                )
@@ -276,9 +277,18 @@ if __name__ == '__main__':
         db_session.add(status_last_seen)
         db_session.commit()
 
-    from_email = ""
-    to_email = ""
-    mail_user = ""
-    mail_password = ""
+    if len(sys.argv) < 2:
+        print("You must pass in a config file")
+        sys.exit(0)
 
-    app.run(host='0.0.0.0', debug=False)
+    config_file = sys.argv[1]
+    if not os.path.isfile(config_file):
+        print("No config file found")
+        sys.exit(0)
+
+    with open(config_file, 'r') as config_values:
+        config = yaml.load(config_values)
+
+    DEBUG = config['debug']
+
+    app.run(host='0.0.0.0', debug=DEBUG)

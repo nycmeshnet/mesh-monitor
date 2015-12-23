@@ -1,0 +1,10 @@
+
+auth_code: 'unique_auth_code'
+debug: false
+
+mail:
+    smtp: 'mail.example.com:465'
+    user: 'user_name'
+    password: 'password'
+    from: 'from@example.com'
+    to: 'to@example.com'
