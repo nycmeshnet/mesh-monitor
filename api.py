@@ -109,7 +109,7 @@ def send_message(subject="NYC Mesh Node Monitor", content=""):
     message = "Subject: %s\n\n%s" % (subject, content)
 
     try:
-        mail = smtplib.SMTP(config['mail']['smtp'])
+        mail = smtplib.SMTP('smtp.gmail.com:587')
         mail.starttls()
         mail.login(config['mail']['user'], config['mail']['password'])
         mail.sendmail(config['mail']['from'], config['mail']['to'], message)
