@@ -180,7 +180,7 @@ def parse_data(data):
 ######################
 
 def add_node(data):
-    node_exist = db_session.query(Node).filter(Node.primaryIp == data['pk']).first()
+    node_exist = db_session.query(Node).filter(Node.pk == data['pk']).first()
     if node_exist is None:
         # Add new node to database
         node_data = Node(pk=data['pk'],
