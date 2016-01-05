@@ -4,7 +4,7 @@ import yaml
 import smtplib
 from flask import Flask, request, send_from_directory
 from flask.ext.restful import Resource, Api
-from sqlalchemy import sqlalchemy, create_engine, Column, Integer, String, and_
+from sqlalchemy import create_engine, Column, Integer, String, and_
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
@@ -108,11 +108,14 @@ def row2dict(row):
 def send_message(subject="NYC Mesh Node Monitor", content=""):
     message = "Subject: %s\n\n%s" % (subject, content)
 
-    mail = smtplib.SMTP('smtp.gmail.com:587')
-    mail.starttls()
-    mail.login(config['mail']['user'], config['mail']['password'])
-    mail.sendmail(config['mail']['from'], config['mail']['to'], message)
-    mail.quit()
+    try:
+        mail = smtplib.SMTP(config['mail']['smtp'])
+        mail.starttls()
+        mail.login(config['mail']['user'], config['mail']['password'])
+        mail.sendmail(config['mail']['from'], config['mail']['to'], message)
+        mail.quit()
+    except Exception as e:
+        print("Error sending email: " + str(e))
 
 
 def parse_data(data):
@@ -134,7 +137,9 @@ def parse_data(data):
     # name,blocked,primaryIp,routes,viaIp,viaDev,metric,lastDesc,lastRef,
     for node_raw_data in nodes:
         node_raw_data = node_raw_data.split(',')
-        node_data = {'name': node_raw_data[0],
+        node_data = {
+                     'pk': node_raw_data[2][-19:],
+                     'name': node_raw_data[0],
                      'blocked': node_raw_data[1],
                      'primaryIp': node_raw_data[2],
                      'routes': node_raw_data[3],
@@ -175,10 +180,11 @@ def parse_data(data):
 ######################
 
 def add_node(data):
-    node_exist = db_session.query(Node).filter(Node.primaryIp == data['primaryIp']).first()
+    node_exist = db_session.query(Node).filter(Node.primaryIp == data['pk']).first()
     if node_exist is None:
         # Add new node to database
-        node_data = Node(name=data['name'],
+        node_data = Node(pk=data['pk'],
+                         name=data['name'],
                          blocked=data['blocked'],
                          primaryIp=data['primaryIp'],
                          routes=data['routes'],
@@ -194,9 +200,10 @@ def add_node(data):
 
     else:
         node_data = db_session.query(Node)\
-                              .filter(Node.primaryIp == data['primaryIp'])\
+                              .filter(Node.pk == data['pk'])\
                               .update({Node.name: data['name'],
                                        Node.blocked: data['blocked'],
+                                       Node.primaryIp: data['primaryIp'],
                                        Node.routes: data['routes'],
                                        Node.viaIp: data['viaIp'],
                                        Node.viaDev: data['viaDev'],
@@ -238,7 +245,8 @@ class Node(Base):
     __tablename__ = 'nodes'
     name      = Column(String(100), nullable=False)
     blocked   = Column(Integer,     nullable=False)
-    primaryIp = Column(String(100), primary_key=True)
+    primaryIp = Column(String(100), nullable=False)
+    pk        = Column(String(19),  primary_key=True)
     routes    = Column(Integer,     nullable=False)
     viaIp     = Column(String(100), nullable=False)
     viaDev    = Column(String(10),  nullable=False)
